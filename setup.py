@@ -1,10 +1,10 @@
-import os.path
 import sys
 
 from setuptools import setup, Command
 
 
 class Tox(Command):
+
     user_options = []
 
     def initialize_options(self):
@@ -23,7 +23,7 @@ setup(
     version="0.9.0",
 
     install_requires=["distribute"],
-    tests_require=["tox"],
+    tests_require=["tox", "mock"],
     cmdclass={"test": Tox},
 
     packages=["kafka"],

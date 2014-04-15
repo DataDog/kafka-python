@@ -2,6 +2,7 @@ import copy
 import logging
 import socket
 import struct
+from random import shuffle
 from threading import local
 
 from kafka.common import ConnectionError
@@ -9,6 +10,31 @@ from kafka.common import ConnectionError
 log = logging.getLogger("kafka")
 
 DEFAULT_SOCKET_TIMEOUT_SECONDS = 120
+DEFAULT_KAFKA_PORT = 9092
+
+
+def collect_hosts(hosts, randomize=True):
+    """
+    Collects a comma-separated set of hosts (host:port) and optionally
+    randomize the returned list.
+    """
+
+    if isinstance(hosts, basestring):
+        hosts = hosts.strip().split(',')
+
+    result = []
+    for host_port in hosts:
+
+        res = host_port.split(':')
+        host = res[0]
+        port = int(res[1]) if len(res) > 1 else DEFAULT_KAFKA_PORT
+        result.append((host.strip(), port))
+
+    if randomize:
+        shuffle(result)
+
+    return result
+
 
 class KafkaConnection(local):
     """
@@ -28,11 +54,10 @@ class KafkaConnection(local):
         super(KafkaConnection, self).__init__()
         self.host = host
         self.port = port
-        self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self._sock.connect((host, port))
         self.timeout = timeout
-        self._sock.settimeout(self.timeout)
-        self._dirty = False
+        self._sock = None
+
+        self.reinit()
 
     def __repr__(self):
         return "<KafkaConnection host=%s port=%d>" % (self.host, self.port)
@@ -47,24 +72,28 @@ class KafkaConnection(local):
 
     def _read_bytes(self, num_bytes):
         bytes_left = num_bytes
-        resp = ''
+        responses = []
+
         log.debug("About to read %d bytes from Kafka", num_bytes)
         if self._dirty:
             self.reinit()
+
         while bytes_left:
             try:
-                data = self._sock.recv(bytes_left)
+                data = self._sock.recv(min(bytes_left, 4096))
             except socket.error:
                 log.exception('Unable to receive data from Kafka')
                 self._raise_connection_error()
+
             if data == '':
                 log.error("Not enough data to read this response")
                 self._raise_connection_error()
+
             bytes_left -= len(data)
             log.debug("Read %d/%d bytes from Kafka", num_bytes - bytes_left, num_bytes)
-            resp += data
+            responses.append(data)
 
-        return resp
+        return ''.join(responses)
 
     ##################
     #   Public API   #
@@ -81,7 +110,7 @@ class KafkaConnection(local):
             sent = self._sock.sendall(payload)
             if sent is not None:
                 self._raise_connection_error()
-        except socket.error, e:
+        except socket.error:
             log.exception('Unable to send payload to Kafka')
             self._raise_connection_error()
 
