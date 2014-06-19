@@ -244,7 +244,10 @@ class KafkaClient(object):
             self.topic_partitions[topic] = []
             for partition, meta in partitions.items():
                 topic_part = TopicAndPartition(topic, partition)
-                self.topics_to_brokers[topic_part] = brokers[meta.leader]
+                if meta.leader == -1:
+                    log.info('No leader for topic %s partition %d', topic, partition)
+                else:
+                    self.topics_to_brokers[topic_part] = brokers[meta.leader]
                 self.topic_partitions[topic].append(partition)
 
     def send_produce_request(self, payloads=[], acks=1, timeout=1000,
