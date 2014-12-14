@@ -20,7 +20,7 @@ class Tox(Command):
 
 setup(
     name="kafka-python",
-    version="0.9.0_1_2fab0",
+    version="0.9.0.dd.1",
 
     install_requires=[],
     tests_require=["tox"],
