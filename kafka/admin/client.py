@@ -1025,12 +1025,18 @@ class KafkaAdminClient(object):
                             for members in described_group_information:
                                 member_information = []
                                 for (member, member_field, member_name)  in zip(members, member_schema.fields, member_schema.names):
-                                    if member_name == 'member_metadata' and member:
-                                        member_information.append(ConsumerProtocolMemberMetadata.decode(member))
-                                    elif member_name == 'member_assignment' and member:
-                                        member_information.append(ConsumerProtocolMemberAssignment.decode(member))
-                                    else:
-                                        member_information.append(member)
+                                    try:
+                                        if member_name == 'member_metadata' and member:
+                                            member_information.append(ConsumerProtocolMemberMetadata.decode(member))
+                                        elif member_name == 'member_assignment' and member:
+                                            member_information.append(ConsumerProtocolMemberAssignment.decode(member))
+                                        else:
+                                            member_information.append(member)
+                                    except ValueError as e:
+                                        # in case deserializtion fails, skip
+                                        # known cases for this are Kafka Connect consumers
+                                        log.warn(e)
+                                        return None
                                 member_info_tuple = MemberInformation._make(member_information)
                                 member_information_list.append(member_info_tuple)
                             described_group_information_list.append(member_information_list)
