@@ -310,7 +310,7 @@ class KafkaAdminClient(object):
             raise NotImplementedError(
                 "Support for GroupCoordinatorRequest_v{} has not yet been added to KafkaAdminClient."
                 .format(version))
-        return self._send_request_to_node(self._client.least_loaded_node(), request)
+        return self._send_request_to_node(self._client.least_loaded_node(), request, wakeup=False)
 
     def _find_coordinator_id_process_response(self, response):
         """Process a FindCoordinatorResponse.
@@ -1008,7 +1008,7 @@ class KafkaAdminClient(object):
             raise NotImplementedError(
                 "Support for DescribeGroupsRequest_v{} has not yet been added to KafkaAdminClient."
                 .format(version))
-        return self._send_request_to_node(group_coordinator_id, request)
+        return self._send_request_to_node(group_coordinator_id, request, wakeup=False)
 
     def _describe_consumer_groups_process_response(self, response):
         """Process a DescribeGroupsResponse into a group description."""
@@ -1124,7 +1124,7 @@ class KafkaAdminClient(object):
             raise NotImplementedError(
                 "Support for ListGroupsRequest_v{} has not yet been added to KafkaAdminClient."
                 .format(version))
-        return self._send_request_to_node(broker_id, request)
+        return self._send_request_to_node(broker_id, request, wakeup=False)
 
     def _list_consumer_groups_process_response(self, response):
         """Process a ListGroupsResponse into a list of groups."""
@@ -1220,7 +1220,7 @@ class KafkaAdminClient(object):
             raise NotImplementedError(
                 "Support for OffsetFetchRequest_v{} has not yet been added to KafkaAdminClient."
                 .format(version))
-        return self._send_request_to_node(group_coordinator_id, request)
+        return self._send_request_to_node(group_coordinator_id, request, wakeup=False)
 
     def _list_consumer_group_offsets_process_response(self, response):
         """Process an OffsetFetchResponse.

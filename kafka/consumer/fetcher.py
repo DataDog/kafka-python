@@ -579,7 +579,7 @@ class Fetcher(six.Iterator):
         # based on response error codes
         future = Future()
 
-        _f = self._client.send(node_id, request)
+        _f = self._client.send(node_id, request, wakeup=False)
         _f.add_callback(self._handle_offset_response, future)
         _f.add_errback(lambda e: future.failure(e))
         return future
